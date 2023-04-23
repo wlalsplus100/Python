@@ -1,6 +1,7 @@
 import discord
 import os
 from datetime import datetime, time, timedelta
+import random
  
 TOKEN = os.environ.get('TOKEN')
 CHANNEL_ID = os.environ.get('CHANNEL_ID')
@@ -46,6 +47,9 @@ class MyClient(discord.Client):
                     await msg.add_reaction('🕝')
                     await msg.add_reaction('🕣')
                     await msg.add_reaction('🕡')
+            elif message.content[1:5] == '제비뽑기':
+                jaby = str(message.content[5:]).split(' ')
+
             else:
                 answer = self.get_answer(message.content)
                 await message.channel.send(answer)
