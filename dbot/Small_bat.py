@@ -2,32 +2,40 @@ import discord
 import os
 from datetime import datetime, time, timedelta
 import random
- 
+import json
+
 TOKEN = os.environ.get('TOKEN')
 CHANNEL_ID = os.environ.get('CHANNEL_ID')
 
+from datetime import datetime, timedelta, time
 
 def get_remaining_time_until(target):
     target_day = target[0]
+    if target_day == 'Friday':
+        target_day = 4
+    elif target_day == 'Saturday':
+        target_day = 5
     target_time = target[1]
     now = datetime.now()
-    days_until_target = (datetime.strptime(target_day, '%A').weekday() - now.weekday()) % 7
     
-    if now.weekday() == datetime.strptime(target_day, '%A').weekday() and now.time() >= target_time:
-        days_until_target = (7 - now.weekday() + datetime.strptime(target_day, '%A').weekday()) % 7
-        
-    next_target_day = now + timedelta(days=days_until_target)
-    next_target_time = datetime.combine(next_target_day.date(), target_time)
-
-    time_remaining = next_target_time - now
-
+    days_until_target = (target_day - now.weekday()) % 7
+    
+    if days_until_target == 0 and now.time() >= target_time:
+        days_until_target = 7
+    
+    if days_until_target == 0 and now.time() < target_time:
+        next_target_time = datetime.combine(now.date(), target_time)
+        time_remaining = next_target_time - now
+    else:
+        next_target_day = now + timedelta(days=days_until_target)
+        next_target_time = datetime.combine(next_target_day.date(), target_time)
+        time_remaining = next_target_time - now
+    
     return time_remaining
 
 
 
-
 class MyClient(discord.Client):
-
     go_home_day = '아직 설정되지 않았습니다.'
 
     async def on_ready(self):
@@ -43,13 +51,17 @@ class MyClient(discord.Client):
                 await message.channel.send('pong {0.author.mention}'.format(message))
             elif message.content[1:] == '귀가설정':
                 if str(message.author) == '일반인1#8315':
-                    msg = await message.channel.send('1. 금요일 14시 30분 귀가\n2. 금요일 20시 30분 귀가\n3. 토요일 6시 30분 귀가')
+                    msg = await message.channel.send('1. 금요일 14시 30분 귀가\n2. 금요일 22시 15분 귀가\n3. 토요일 6시 30분 귀가')
                     await msg.add_reaction('🕝')
                     await msg.add_reaction('🕣')
                     await msg.add_reaction('🕡')
             elif message.content[1:5] == '제비뽑기':
-                jaby = str(message.content[5:]).split(' ')
-
+                if(len(message.content) > 6):
+                    jaby = str(message.content[6:]).split(' ')
+                    result = random.choice(jaby)
+                    await message.channel.send("매우 공정한 제비뽑기 결과 {}(이)가 뽑혔습니다".format(result))
+                else:
+                    await message.channel.send("제비뽑기의 요소를 입력해주세요.")
             else:
                 answer = self.get_answer(message.content)
                 await message.channel.send(answer)
@@ -59,10 +71,10 @@ class MyClient(discord.Client):
             return None
         if str(reaction.emoji) == "🕝":
             await reaction.message.channel.send("귀가 시간이 금요일 14시 30분으로 설정되었습니다.")
-            MyClient.go_home_day = ['Sunday', time(14, 30)]
+            MyClient.go_home_day = ['Friday', time(14, 30)]
         if str(reaction.emoji) == "🕣":
-            await reaction.message.channel.send("귀가 시간이 금요일 20시 30분으로 설정되었습니다.")
-            MyClient.go_home_day = ['Friday', time(20, 30)]
+            await reaction.message.channel.send("귀가 시간이 금요일 22시 15분으로 설정되었습니다.")
+            MyClient.go_home_day = ['Friday', time(22, 15)]
         if str(reaction.emoji) == "🕡":
             await reaction.message.channel.send("귀가 시간이 토요일 6시 30분으로 설정되었습니다.")
             MyClient.go_home_day = ['Saturday', time(6, 30)]
@@ -82,14 +94,15 @@ class MyClient(discord.Client):
     def get_time_gohome(self):
         if type(MyClient.go_home_day) == str:
             return ['귀가일이 설정되지 않았습니다.', '얼마 남았는지 구할 수 없습니다.']
-        if MyClient.go_home_day == ['Sunday', time(14, 30)]:
+        if MyClient.go_home_day == ['Friday', time(14, 30)]:
             go_home_day = '금요일 14시 30분'
-        elif MyClient.go_home_day == ['Friday', time(20, 30)]:
-            go_home_day = '금요일 20시 30분'
+        elif MyClient.go_home_day == ['Friday', time(22, 15)]:
+            go_home_day = '금요일 22시 15분'
         elif MyClient.go_home_day == ['Saturday', time(6, 30)]:
             go_home_day = '토요일 6시 30분'
-        days = get_remaining_time_until(MyClient.go_home_day).days
-        secs = get_remaining_time_until(MyClient.go_home_day).seconds
+        result = get_remaining_time_until(MyClient.go_home_day)
+        days = result.days
+        secs = result.seconds
         hours = secs // 3600
         mins = (secs // 60) % 60
         secs = secs % 60
