@@ -36,7 +36,7 @@ def get_remaining_time_until(target):
 
 
 class MyClient(discord.Client):
-    go_home_day = '아직 설정되지 않았습니다.'
+
 
     async def on_ready(self):
         print('Logged on as {0}!'.format(self.user))
@@ -69,15 +69,16 @@ class MyClient(discord.Client):
     async def on_reaction_add(self, reaction, user):
         if user.bot == 1: #봇이면 패스
             return None
-        if str(reaction.emoji) == "🕝":
-            await reaction.message.channel.send("귀가 시간이 금요일 14시 30분으로 설정되었습니다.")
-            MyClient.go_home_day = ['Friday', time(14, 30)]
-        if str(reaction.emoji) == "🕣":
-            await reaction.message.channel.send("귀가 시간이 금요일 22시 15분으로 설정되었습니다.")
-            MyClient.go_home_day = ['Friday', time(22, 15)]
-        if str(reaction.emoji) == "🕡":
-            await reaction.message.channel.send("귀가 시간이 토요일 6시 30분으로 설정되었습니다.")
-            MyClient.go_home_day = ['Saturday', time(6, 30)]
+        with open('data.json') as f:
+            if str(reaction.emoji) == "🕝":
+                await reaction.message.channel.send("귀가 시간이 금요일 14시 30분으로 설정되었습니다.")
+                MyClient.go_home_day = ['Friday', time(14, 30)]
+            if str(reaction.emoji) == "🕣":
+                await reaction.message.channel.send("귀가 시간이 금요일 22시 15분으로 설정되었습니다.")
+                MyClient.go_home_day = ['Friday', time(22, 15)]
+            if str(reaction.emoji) == "🕡":
+                await reaction.message.channel.send("귀가 시간이 토요일 6시 30분으로 설정되었습니다.")
+                MyClient.go_home_day = ['Saturday', time(6, 30)]
  
     def get_day_of_week(self):
         weekday_list = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
