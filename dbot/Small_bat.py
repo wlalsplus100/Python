@@ -41,6 +41,21 @@ class MyClient(discord.Client):
     async def on_ready(self):
         print('Logged on as {0}!'.format(self.user))
         await self.change_presence(status=discord.Status.online, activity=discord.Game("대기중"))
+        try:
+            with open('.\\dbot\\data.json') as f:
+                json_data = json.load(f)
+                MyClient.go_home_day = []
+                for item in json_data:
+                    if ":" in item:  # Assume it's a time string
+                        time_obj = time.fromisoformat(item)
+                        MyClient.go_home_day.append(time_obj)
+                    else:  # Assume it's a string
+                        MyClient.go_home_day.append(item)
+        except json.decoder.JSONDecodeError:
+            MyClient.go_home_day = "아직 설정되지 않음"
+
+
+
  
     async def on_message(self, message):
         if message.author == self.user:
@@ -69,16 +84,43 @@ class MyClient(discord.Client):
     async def on_reaction_add(self, reaction, user):
         if user.bot == 1: #봇이면 패스
             return None
-        with open('data.json') as f:
-            if str(reaction.emoji) == "🕝":
-                await reaction.message.channel.send("귀가 시간이 금요일 14시 30분으로 설정되었습니다.")
-                MyClient.go_home_day = ['Friday', time(14, 30)]
-            if str(reaction.emoji) == "🕣":
-                await reaction.message.channel.send("귀가 시간이 금요일 22시 15분으로 설정되었습니다.")
-                MyClient.go_home_day = ['Friday', time(22, 15)]
-            if str(reaction.emoji) == "🕡":
-                await reaction.message.channel.send("귀가 시간이 토요일 6시 30분으로 설정되었습니다.")
-                MyClient.go_home_day = ['Saturday', time(6, 30)]
+        if str(reaction.emoji) == "🕝":
+            await reaction.message.channel.send("귀가 시간이 금요일 14시 30분으로 설정되었습니다.")
+            MyClient.go_home_day = ['Friday', time(14, 30)]
+            json_data = []
+            for item in MyClient.go_home_day:
+                if isinstance(item, time):
+                    json_data.append(item.strftime("%H:%M:%S"))  # Convert time object to string
+                else:
+                    json_data.append(item)  # Keep strings as they are
+            
+            with open(".\\dbot\\data.json", "w") as file:
+                json.dump(json_data, file)
+        if str(reaction.emoji) == "🕣":
+            await reaction.message.channel.send("귀가 시간이 금요일 22시 15분으로 설정되었습니다.")
+            MyClient.go_home_day = ['Friday', time(22, 15)]
+            json_data = []
+            for item in MyClient.go_home_day:
+                if isinstance(item, time):
+                    json_data.append(item.strftime("%H:%M:%S"))  # Convert time object to string
+                else:
+                    json_data.append(item)  # Keep strings as they are
+
+            with open(".\\dbot\\data.json", "w") as file:
+                json.dump(json_data, file)
+
+        if str(reaction.emoji) == "🕡":
+            await reaction.message.channel.send("귀가 시간이 토요일 6시 30분으로 설정되었습니다.")
+            MyClient.go_home_day = ['Saturday', time(6, 30)]
+            json_data = []
+            for item in MyClient.go_home_day:
+                if isinstance(item, time):
+                    json_data.append(item.strftime("%H:%M:%S"))  # Convert time object to string
+                else:
+                    json_data.append(item)  # Keep strings as they are
+            
+            with open(".\\dbot\\data.json", "w") as file:
+                json.dump(json_data, file)
  
     def get_day_of_week(self):
         weekday_list = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
